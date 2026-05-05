@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.Python
+build/
+dist/
+.pytest_cache/
+.coverage
+.tox/
+htmlcov/
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+
+# IDE / 编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Streamlit
+.streamlit/secrets.toml
+
+# 真实数据下载缓存（GitHub 仓库不放原始 .XPT 大文件，由 download_real_data.py 重新下载）
+data/real/nhanes_2017_2018/
+data/real/PHQ-9_Dataset_Mendeley.csv
+data/real/mendeley_phq9_students_raw.csv
+# 保留处理后的 CSV（文件小，便于直接演示）
+!data/real/nhanes_phq9_processed.csv
+!data/real/mendeley_phq9_processed.csv
+
+# 日志
+*.log
+/tmp/
+
+# 临时文件
+*.tmp
+*.bak
+.~*
+
+# 团队内部文件（不公开 - 可能含工具链 / 报名细节）
+docs/你需要做的事.md
+docs/提交清单.md
+
+# 操作系统
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Notebook
+.ipynb_checkpoints/
