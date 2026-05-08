@@ -35,6 +35,13 @@ Icon?
 # Streamlit
 .streamlit/secrets.toml
 
+# 环境变量与 API 密钥（绝对不能上传）
+.env
+.env.local
+.env.production
+*.key
+secrets/
+
 # 真实数据下载缓存（GitHub 仓库不放原始 .XPT 大文件，由 download_real_data.py 重新下载）
 data/real/nhanes_2017_2018/
 data/real/PHQ-9_Dataset_Mendeley.csv

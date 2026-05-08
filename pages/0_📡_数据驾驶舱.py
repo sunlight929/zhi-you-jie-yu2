@@ -49,11 +49,25 @@ section[data-testid="stSidebar"] {background: #0A0B1E;}
 [data-testid="stSidebar"] * {color: #E8F0FF !important;}
 header[data-testid="stHeader"] {background: transparent;}
 
-/* 隐藏 Streamlit 自带的 Deploy 按钮 + 主菜单 */
+/* 隐藏 Streamlit 自带的 Deploy 按钮 + 主菜单（保留侧边栏开关）*/
 .stAppDeployButton, [data-testid="stAppDeployButton"],
-[data-testid="stToolbar"], [data-testid="stMainMenu"],
-#MainMenu, button[kind="header"], footer
+[data-testid="stMainMenu"], #MainMenu, footer
 {display: none !important; visibility: hidden !important;}
+
+/* 侧边栏折叠/展开按钮永远显示 + 高亮可见 */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="stSidebarCollapseButton"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 999999 !important;
+}
+[data-testid="stSidebarCollapsedControl"] button,
+[data-testid="stSidebarCollapseButton"] button {
+  background: rgba(91,200,255,0.25) !important;
+  border: 1px solid rgba(91,200,255,0.6) !important;
+  color: #5BC8FF !important;
+}
 
 .cockpit-header {
   background: linear-gradient(90deg, transparent 0%, rgba(91,200,255,0.12) 50%, transparent 100%);

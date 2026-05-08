@@ -14,6 +14,11 @@ from utils.data_loader import load_model_bundle
 from utils.model_utils import (
     predict_with_explain, risk_label_and_advice, column_labels,
 )
+from utils.llm_assistant import (
+    is_configured as llm_is_configured,
+    chat_stream as llm_chat_stream,
+    get_suggested_questions,
+)
 from utils.scales import (
     PHQ9_QUESTIONS, PHQ9_OPTIONS, PHQ9_OPTION_VALUES,
     phq9_severity, phq9_clinical_advice,
@@ -150,6 +155,14 @@ if is_student:
     with c5:
         drinking = st.checkbox("规律饮酒")
 
+    # 保存当前表单"指纹"，供 sidebar 检测是否需要重新提交
+    st.session_state["current_form_signature"] = (
+        "student", phq9_total, age, gender, grade, major,
+        sleep, exercise, screen, academic, financial,
+        relationship, social, family_hist, childhood,
+        chronic, smoking, drinking,
+    )
+
     submitted = st.button("🔬 提交评估", type="primary", use_container_width=True)
 
     if submitted:
@@ -279,6 +292,31 @@ padding:14px 18px; border-radius:6px; font-size:15px;">
         st.caption("💡 本评估结果由 **PHQ-9 临床量表（Kroenke, 2001）+ 风险因素 ML 模型** 双重判定。"
                    "中度及以上风险务必前往三甲医院精神 / 心理科评估。")
 
+        # ---------- 保存评估上下文，供 LLM 助手使用 ----------
+        labels_map_save = column_labels("student")
+        contribs_pairs = sorted(
+            zip(result["features"], result["contributions"]),
+            key=lambda p: abs(p[1]), reverse=True,
+        )
+        top3 = [labels_map_save.get(f, f) for f, _ in contribs_pairs[:3]]
+        st.session_state["llm_ctx"] = {
+            "group": "student",
+            "scale_score": phq9_total,
+            "severity": phq9_sev["level"],
+            "ml_proba": result["final_proba"],
+            "top_factors": top3,
+            "q9_positive": phq9_q9 >= 1,
+        }
+        # 记录提交时的表单"指纹"，用于检测后续修改
+        st.session_state["llm_form_signature"] = (
+            "student", phq9_total, age, gender, grade, major,
+            sleep, exercise, screen, academic, financial,
+            relationship, social, family_hist, childhood,
+            chronic, smoking, drinking,
+        )
+        # 新评估开始 → 重置聊天历史
+        st.session_state["llm_messages"] = []
+
 
 # ============================================================
 # 中老年版（CES-D 10）
@@ -317,28 +355,46 @@ else:
         region = st.selectbox("居住地区", ["城市", "城镇", "农村"])
 
     st.markdown('<div class="scale-title">第三部分：生活与健康</div>', unsafe_allow_html=True)
+    # Row 1：3 个 slider 同类对齐
     c1, c2, c3 = st.columns(3)
     with c1:
-        living_alone = st.checkbox("是否独居")
         sleep = st.slider("平均每日睡眠时长（小时）", 3.0, 11.0, 6.5, 0.5)
     with c2:
         chronic_count = st.slider("慢性病数量", 0, 8, 1)
-        adl = st.slider("ADL 生活自理能力（满分 14）", 6.0, 14.0, 13.0, 0.5)
     with c3:
+        adl = st.slider("ADL 生活自理能力（满分 14）", 6.0, 14.0, 13.0, 0.5)
+
+    # Row 2：BMI slider + 经济水平 selectbox（视觉高度接近）
+    c1, c2 = st.columns(2)
+    with c1:
         bmi = st.slider("BMI", 14.0, 40.0, 23.0, 0.5)
+    with c2:
         income = st.selectbox("家庭经济水平", ["低", "中", "高"])
 
     st.markdown('<div class="scale-title">第四部分：社会参与与生活习惯</div>',
                unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
+    # Row 1：2 个 slider
+    c1, c2 = st.columns(2)
     with c1:
         social = st.slider("过去一个月社会活动种类", 0, 8, 2)
     with c2:
         contact = st.slider("子女月均联系次数", 0, 30, 8)
-    with c3:
+
+    # Row 2：3 个 checkbox 同类对齐（独居挪到这里和吸烟/饮酒一起）
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        living_alone = st.checkbox("是否独居")
+    with c2:
         smoking = st.checkbox("吸烟")
-    with c4:
+    with c3:
         drinking = st.checkbox("规律饮酒")
+
+    # 保存当前表单"指纹"，供 sidebar 检测是否需要重新提交
+    st.session_state["current_form_signature"] = (
+        "elderly", cesd_total, age, gender, education, region,
+        living_alone, sleep, chronic_count, adl, bmi, income,
+        social, contact, smoking, drinking,
+    )
 
     submitted = st.button("🔬 提交评估", type="primary", use_container_width=True)
 
@@ -447,3 +503,160 @@ padding:14px 18px; border-radius:6px; font-size:15px;">
         st.markdown("---")
         st.caption("💡 本评估结果由 **CES-D 10（CHARLS 采用版本）量表 + 风险因素 ML 模型** 双重判定。"
                    "中老年群体若量表 ≥10 分，建议家属陪同至老年精神心理科或心身医学科评估。")
+
+        # ---------- 保存评估上下文，供 LLM 助手使用 ----------
+        labels_map_save = column_labels("elderly")
+        contribs_pairs = sorted(
+            zip(result["features"], result["contributions"]),
+            key=lambda p: abs(p[1]), reverse=True,
+        )
+        top3 = [labels_map_save.get(f, f) for f, _ in contribs_pairs[:3]]
+        st.session_state["llm_ctx"] = {
+            "group": "elderly",
+            "scale_score": cesd_total,
+            "severity": cesd_sev["level"],
+            "ml_proba": result["final_proba"],
+            "top_factors": top3,
+            "q9_positive": False,  # CES-D 10 没有自杀念头单独题项
+        }
+        # 记录提交时的表单"指纹"
+        st.session_state["llm_form_signature"] = (
+            "elderly", cesd_total, age, gender, education, region,
+            living_alone, sleep, chronic_count, adl, bmi, income,
+            social, contact, smoking, drinking,
+        )
+        st.session_state["llm_messages"] = []
+
+
+# ============================================================
+# 🤖 AI 心理健康助手（DeepSeek 大模型 · 大赛合规清单内）
+# ============================================================
+# 放在左侧侧边栏。@st.fragment 必须在调用位置渲染，
+# 所以 fragment 内部不能再用 with st.sidebar，要在外部调用时进入 sidebar。
+
+@st.fragment
+def render_llm_chat_content():
+    """聊天内容（仅内容，不含 sidebar 容器切换）。
+    fragment 限制：渲染必须在调用位置，所以 with st.sidebar 必须在外面。
+    """
+    st.markdown("### 🤖 AI 心理健康助手")
+
+    if "llm_ctx" not in st.session_state:
+        st.caption("DeepSeek · 大赛合规清单 AI 工具")
+        st.info("👆 先填写并提交评估，我才能基于你的结果回答问题")
+        return
+
+    # 检测当前表单是否与上次提交一致
+    current_sig = st.session_state.get("current_form_signature")
+    saved_sig = st.session_state.get("llm_form_signature")
+    is_stale = (current_sig is not None and saved_sig is not None
+                and current_sig != saved_sig)
+
+    if is_stale:
+        st.caption("DeepSeek · 大赛合规清单 AI 工具")
+        st.warning(
+            "📝 **问卷已变更**\n\n"
+            "你修改了问卷选项。请滚动到顶部，重新点击「🔬 提交评估」"
+            "以更新评估结果，AI 助手才能基于最新结果回答。\n\n"
+            "或者你也可以清除上次结果："
+        )
+        if st.button("🗑️ 清除上次评估结果", use_container_width=True,
+                    key="clear_stale_ctx"):
+            for k in ("llm_ctx", "llm_form_signature", "llm_messages"):
+                st.session_state.pop(k, None)
+            st.rerun(scope="fragment")
+        return
+
+    ctx = st.session_state["llm_ctx"]
+    st.caption(f"DeepSeek 大模型 · 已读取评估结果（{ctx['severity']}）")
+
+    if not llm_is_configured():
+        st.warning("""
+**未配置 API Key**
+
+配置方法：
+1. 注册 [DeepSeek](https://platform.deepseek.com/)
+2. 项目根目录创建 `.env`：
+```
+DEEPSEEK_API_KEY=sk-你的key
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+```
+3. 重启 streamlit
+        """)
+        return
+
+    # ============ 输入框置于顶部 ============
+    user_input = st.chat_input("有任何疑问？在这里提问")
+    pending = st.session_state.pop("llm_pending", None)
+    prompt = pending or user_input
+
+    # 推荐问题（仅首次未输入时显示，紧贴输入框下方）
+    has_messages = bool(st.session_state.get("llm_messages"))
+    if not has_messages and not prompt:
+        sugg = get_suggested_questions(ctx["group"], ctx["scale_score"])
+        st.caption("💡 推荐问题（点击直接发送）")
+        for i, q in enumerate(sugg):
+            if st.button(q, key=f"sugg_sb_{i}", use_container_width=True):
+                st.session_state["llm_pending"] = q
+                st.rerun(scope="fragment")
+
+    # 写入用户消息到历史
+    if prompt:
+        st.session_state.setdefault("llm_messages", []).append(
+            {"role": "user", "content": prompt}
+        )
+
+    # ============ 对话历史置于下方 ============
+    if st.session_state.get("llm_messages"):
+        st.caption("💬 对话")
+        chat_container = st.container(height=380)
+        with chat_container:
+            # 显示已有历史
+            for msg in st.session_state["llm_messages"]:
+                avatar = "🩺" if msg["role"] == "assistant" else "🧑"
+                with st.chat_message(msg["role"], avatar=avatar):
+                    st.markdown(msg["content"])
+
+            # 流式生成最新回复
+            if prompt:
+                with st.chat_message("assistant", avatar="🩺"):
+                    placeholder = st.empty()
+                    full_response = ""
+                    try:
+                        for token in llm_chat_stream(
+                            user_message=prompt,
+                            history=st.session_state["llm_messages"][:-1],
+                            group=ctx["group"],
+                            scale_score=ctx["scale_score"],
+                            severity=ctx["severity"],
+                            ml_proba=ctx["ml_proba"],
+                            top_factors=ctx["top_factors"],
+                            q9_positive=ctx["q9_positive"],
+                        ):
+                            full_response += token
+                            placeholder.markdown(full_response + "▌")
+                        placeholder.markdown(full_response)
+                    except Exception as e:
+                        full_response = (f"⚠️ AI 助手暂时不可用：{e}\n\n"
+                                       f"请稍后重试，或拨打热线 **400-161-9995**。")
+                        placeholder.error(full_response)
+
+                    st.session_state["llm_messages"].append(
+                        {"role": "assistant", "content": full_response}
+                    )
+
+        # 清空按钮
+        if st.button("🔄 清空对话", use_container_width=True, key="clear_chat"):
+            st.session_state["llm_messages"] = []
+            st.rerun(scope="fragment")
+    elif not prompt:
+        # 首次进入且无对话时，简短一行引导（不再占大段空白）
+        st.caption("👆 在输入框打字，或点击上方推荐问题开始对话")
+
+    st.caption("⚠️ 仅供参考，不替代医生诊断。紧急情况 400-161-9995")
+
+
+# 在 sidebar 中调用 fragment（外部进入 sidebar，内部不再切换 container）
+with st.sidebar:
+    st.markdown("---")
+    render_llm_chat_content()

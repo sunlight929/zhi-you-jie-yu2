@@ -148,10 +148,10 @@ CESD10_QUESTIONS: List[str] = [
 CESD10_REVERSE_INDEX = [4, 7]
 
 CESD10_OPTIONS: List[str] = [
-    "很少或根本没有（不到 1 天）",
-    "不太多（1-2 天）",
+    "很少（<1 天）",
+    "偶尔（1-2 天）",
     "有时（3-4 天）",
-    "大多数时间（5-7 天）",
+    "经常（5-7 天）",
 ]
 
 CESD10_OPTION_VALUES: List[int] = [0, 1, 2, 3]
