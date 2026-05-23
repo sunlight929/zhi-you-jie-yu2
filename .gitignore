@@ -63,6 +63,10 @@ data/real/mendeley_phq9_students_raw.csv
 docs/你需要做的事.md
 docs/提交清单.md
 
+# 用户测试匿名数据（包含测试用户填写的问卷答案 + 反馈，不公开）
+data/user_responses.csv
+data/user_feedback.csv
+
 # 操作系统
 Thumbs.db
 ehthumbs.db

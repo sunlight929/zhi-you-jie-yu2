@@ -8,9 +8,13 @@ from utils.dark_charts import (
     neon_horizontal_bar, NEON_BLUE, NEON_PINK, NEON_PURPLE,
     BG_DARK, TEXT_LIGHT,
 )
+from utils.test_mode import redirect_if_test_mode_non_assessment
 import plotly.express as px
 
 st.set_page_config(page_title="天津决策支持 | 知忧·解郁", page_icon="🏙️", layout="wide")
+
+# 测试模式：自动跳转评估页（完整版下零影响）
+redirect_if_test_mode_non_assessment()
 
 st.markdown("""
 <style>

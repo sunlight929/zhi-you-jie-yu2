@@ -24,6 +24,7 @@ from utils.dark_charts import (
     neon_heatmap, neon_radar,
 )
 from utils.china_map import render_china_depression_map
+from utils.test_mode import redirect_if_test_mode_non_assessment
 
 
 st.set_page_config(
@@ -32,6 +33,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# 测试模式：自动跳转评估页（完整版下零影响）
+redirect_if_test_mode_non_assessment()
 
 # ============================================================
 # 深色全屏样式
@@ -230,7 +234,7 @@ with kpi2:
 <div class="kpi-tile success">
   <div class="kpi-label">✅ 真实公开数据</div>
   <div class="kpi-value">{real_n:,}</div>
-  <div class="kpi-sub">NHANES + Mendeley 学术公开</div>
+  <div class="kpi-sub">NHANES + Mendeley</div>
 </div>
     """, unsafe_allow_html=True)
 with kpi3:
@@ -238,7 +242,7 @@ with kpi3:
 <div class="kpi-tile">
   <div class="kpi-label">🇨🇳 中国仿真数据</div>
   <div class="kpi-value">{sim_n:,}</div>
-  <div class="kpi-sub">基于 CHARLS / 流行病学文献</div>
+  <div class="kpi-sub">基于 CHARLS 文献</div>
 </div>
     """, unsafe_allow_html=True)
 with kpi4:
@@ -298,6 +302,17 @@ with row1c1:
    style="color:#5BC8FF" target="_blank">Lu J et al. 2021 Lancet Psychiatry</a>
 全国成人精神障碍流行病学调查的报告范围（4.5%-9.5%），
 按地理梯度构造的演示分布。真实部署需对接<b>国家卫健委统计年鉴</b>与<b>各省疾控中心精神卫生数据</b>。
+</div>
+<div class="explainer" style="margin-top:8px; border-left-color:#FBBF24;">
+<b>🗺️ 地图合规声明：</b>本图行政区划依据
+<a href="http://bzdt.ch.mnr.gov.cn/" style="color:#5BC8FF" target="_blank">
+中华人民共和国自然资源部 · 标准地图服务</a>发布的
+<b>《中华人民共和国地图》（1:4800 万）</b>制作，
+符合《公开地图内容表示规范》要求。
+<br>
+<b>审图号</b>：<span style="color:#FBBF24; font-weight:bold;">GS(2016)1600 号</span>
+&nbsp;|&nbsp; <b>监制</b>：自然资源部
+&nbsp;|&nbsp; <b>用途</b>：抑郁检出率统计可视化
 </div>
     """, unsafe_allow_html=True)
 

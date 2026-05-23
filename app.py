@@ -14,6 +14,7 @@ from utils.data_loader import (
     is_real_data_available, data_sources_summary,
 )
 from utils.dark_charts import neon_trend
+from utils.test_mode import redirect_if_test_mode_non_assessment
 
 
 st.set_page_config(
@@ -22,6 +23,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# 测试模式：扫码进来的用户直接跳转到评估页（完整版下零影响）
+redirect_if_test_mode_non_assessment()
 
 st.markdown("""
 <style>
