@@ -33,6 +33,7 @@ from utils.test_mode import (
     save_anonymous_response,
     render_feedback_form,
     soften_severity_label,
+    soften_interpretation,
 )
 
 
@@ -325,10 +326,11 @@ if is_student:
     if submitted:
         # ---------- ① PHQ-9 临床打分 ----------
         phq9_sev = phq9_severity(phq9_total)
-        # 测试模式下使用温和措辞（"中度抑郁"→"中等情绪压力"），完整版保留原标签
+        # 测试模式下同时软化「等级标签」和「解释文字」（去掉"抑郁症状"等词）
         if is_test_mode():
             phq9_sev = {**phq9_sev,
-                        "level": soften_severity_label(phq9_sev["level"])}
+                        "level": soften_severity_label(phq9_sev["level"]),
+                        "interpretation": soften_interpretation(phq9_sev["interpretation"])}
 
         # ---------- ② 模型推理 ----------
         x_row = pd.DataFrame([{
@@ -596,10 +598,11 @@ else:
 
     if submitted:
         cesd_sev = cesd10_severity(cesd_total)
-        # 测试模式下使用温和措辞，完整版保留原临床标签
+        # 测试模式下同时软化「等级标签」和「解释文字」（去掉"抑郁症状"等词）
         if is_test_mode():
             cesd_sev = {**cesd_sev,
-                        "level": soften_severity_label(cesd_sev["level"])}
+                        "level": soften_severity_label(cesd_sev["level"]),
+                        "interpretation": soften_interpretation(cesd_sev["interpretation"])}
 
         edu_num = {"未上学": 0, "小学": 6, "初中": 9,
                    "高中": 12, "大专及以上": 15}[education]

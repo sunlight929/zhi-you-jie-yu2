@@ -115,16 +115,21 @@ def inject_test_mode_css():
 
     /* ===== 移动端适配（屏幕宽度 < 768px） ===== */
     @media (max-width: 768px) {
-        /* 所有 Streamlit 多列布局强制变单列堆叠 */
+        /* 所有 Streamlit 多列布局强制变单列堆叠 + 足够间距避免卡片视觉重叠 */
         [data-testid="stHorizontalBlock"] {
             flex-direction: column !important;
-            gap: 8px !important;
+            gap: 18px !important;
         }
         [data-testid="stColumn"],
         [data-testid="column"] {
             min-width: 100% !important;
             width: 100% !important;
             flex: 1 1 100% !important;
+        }
+        /* 得分卡之间额外加 margin 避免边框紧贴重叠 */
+        .score-card {
+            margin-bottom: 6px !important;
+            padding: 16px 14px !important;
         }
 
         /* 整体 padding 减少，多出屏幕空间 */
@@ -256,6 +261,38 @@ def soften_severity_label(level: str) -> str:
     if not is_test_mode():
         return level
     return _SOFTEN_LABEL_MAP.get(level, level)
+
+
+# 临床解释文字的温和版本（测试模式下替换得分卡底部那行小字）
+# 避免出现"轻度/中度/重度抑郁症状"这种容易让人误以为是诊断的词
+_SOFTEN_INTERPRETATION_MAP = {
+    # PHQ-9
+    "未发现明显抑郁症状。":
+        "未发现明显情绪困扰。",
+    "存在轻度抑郁症状，建议关注情绪变化、自我调节，必要时寻求心理咨询。":
+        "近期情绪可能有一些波动，建议关注作息和压力变化，保持自我调节的好习惯。",
+    "存在中度抑郁症状，建议尽快寻求精神科或心理科专业评估。":
+        "近期情绪压力较明显，建议主动关注情绪状态，必要时和心理咨询师聊聊。",
+    "存在中重度抑郁症状，建议及时就医，由精神科医师评估是否需要药物治疗。":
+        "情绪压力较明显且可能持续，建议尽早寻求心理咨询或专业评估。",
+    "存在重度抑郁症状，强烈建议立即就医并由精神科医师制定综合治疗方案。":
+        "情绪困扰较显著，建议尽快寻求专业帮助。如有强烈不适请拨打 400-161-9995。",
+    # CES-D 10
+    "目前未提示明显抑郁症状，但 ≥6 分仍建议关注情绪变化。":
+        "目前未发现明显情绪困扰，仍建议关注作息与情绪变化。",
+    "存在抑郁症状，建议尽快寻求精神科或老年心理门诊评估。":
+        "情绪压力可能较明显，建议家属多关心，可考虑陪同到老年心理门诊咨询。",
+    "存在显著抑郁症状，强烈建议立即就医评估。":
+        "情绪困扰较显著，建议尽快寻求专业帮助，家属请加强关心和陪伴。",
+}
+
+
+def soften_interpretation(text: str) -> str:
+    """测试模式下软化得分卡底部的解释文字（去掉"抑郁症状"等吓人词）。
+    完整版下原样返回。"""
+    if not is_test_mode():
+        return text
+    return _SOFTEN_INTERPRETATION_MAP.get(text, text)
 
 
 def render_test_disclaimer_banner():
