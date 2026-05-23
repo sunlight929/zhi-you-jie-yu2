@@ -596,7 +596,7 @@ def slide_6():
     add_text(s, "🩺  张小臣  副研究员 / 正高级工程师",
              Inches(0.9), Inches(4.45), Inches(5.6), Inches(0.4),
              font_size=14, color=TJU_GOLD, bold=True)
-    add_text(s, "天津大学医学工程与转化医学研究院",
+    add_text(s, "天津大学医学院",
              Inches(0.9), Inches(4.85), Inches(5.6), Inches(0.4),
              font_size=11, color=TEXT_GRAY)
     add_text(s, "神经生物学  ·  抑郁症发病机制",
@@ -618,7 +618,7 @@ def slide_6():
     add_text(s, "🤖  张淑芳  副教授 / 博士生导师",
              Inches(7.05), Inches(4.45), Inches(5.6), Inches(0.4),
              font_size=14, color=TJU_GOLD, bold=True)
-    add_text(s, "天津大学电气与自动化工程学院",
+    add_text(s, "天津大学电气自动化与信息工程学院",
              Inches(7.05), Inches(4.85), Inches(5.6), Inches(0.4),
              font_size=11, color=TEXT_GRAY)
     add_text(s, "电子信息工程系  系主任",
