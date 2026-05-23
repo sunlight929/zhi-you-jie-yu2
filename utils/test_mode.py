@@ -451,11 +451,16 @@ def _save_feedback(payload: dict) -> bool:
         return False
 
 
+@st.fragment
 def render_feedback_form():
-    """评估结果下方的反馈表。
+    """评估结果下方的反馈表（独立 fragment，避免与 AI 助手 fragment 冲突）。
 
     完整版下直接 return，不渲染（评委、答辩演示不会看到）。
     测试版下在评估结果末尾展开显示。
+
+    @st.fragment 装饰器确保:
+    - form 被正确检测到 submit button（修复"Missing Submit Button"错误）
+    - 提交反馈后只重新渲染本表单,不影响外部已渲染的评估结果
     """
     if not is_test_mode():
         return
@@ -546,7 +551,9 @@ def render_feedback_form():
             }
             if _save_feedback(payload):
                 st.session_state["feedback_submitted"] = True
-                st.rerun()
+                # fragment scope rerun:只重新渲染本反馈表（显示"感谢"消息）
+                # 不触发整页重跑（评估结果、AI 助手都保持显示）
+                st.rerun(scope="fragment")
             else:
                 st.error("反馈保存失败，请稍后重试。或者把意见告诉团队成员也可以。")
 
