@@ -157,23 +157,20 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
         return
 
     # ============ 输入框置于顶部 ============
-    # 用 text_input + button 代替 st.chat_input
-    # 原因: chat_input 在移动微信浏览器 + fragment 组合下,定位会被遮挡或异常
-    # text_input + form_submit_button 在所有环境(桌面 / 移动 / 微信内置浏览器)都稳定
+    # 用 text_input + form_submit_button 代替 st.chat_input
+    # 原因 1: chat_input 在移动微信浏览器 + fragment 组合下,定位会被遮挡
+    # 原因 2: form_submit_button 必须是 form 的直接子级（不能嵌套在 column 里）,
+    #         否则 Streamlit 检测不到,会报 "Missing Submit Button"
     user_input = None
     with st.form("ai_chat_input_form", clear_on_submit=True):
-        col_input, col_send = st.columns([4, 1])
-        with col_input:
-            typed = st.text_input(
-                "提问",
-                placeholder="有任何疑问？在这里提问",
-                label_visibility="collapsed",
-                key="ai_chat_text",
-            )
-        with col_send:
-            chat_send = st.form_submit_button(
-                "发送", type="primary", use_container_width=True
-            )
+        typed = st.text_input(
+            "提问",
+            placeholder="有任何疑问？在这里提问 (例如：睡眠不好怎么办)",
+            label_visibility="collapsed",
+        )
+        chat_send = st.form_submit_button(
+            "📨 发送", type="primary", use_container_width=True
+        )
         if chat_send and typed and typed.strip():
             user_input = typed.strip()
 
