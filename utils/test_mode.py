@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +37,91 @@ import streamlit as st
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 RESPONSES_CSV = DATA_DIR / "user_responses.csv"
 FEEDBACK_CSV = DATA_DIR / "user_feedback.csv"
+
+
+# ============================================================
+# Supabase 云数据库支持（数据持久化）
+# ============================================================
+# 优先写入 Supabase；失败时静默回退本地 CSV，保证用户体验不中断。
+# Supabase URL 和 KEY 通过 Streamlit Secrets / 环境变量配置。
+def _get_supabase_credentials() -> tuple[str, str]:
+    """从 st.secrets / 环境变量读取 Supabase URL + Key。"""
+    url = ""
+    key = ""
+    # 优先 Streamlit Secrets
+    try:
+        url = st.secrets.get("SUPABASE_URL", "")
+        key = st.secrets.get("SUPABASE_KEY", "")
+    except Exception:
+        pass
+    # 兜底环境变量（本地开发可用 .env）
+    if not url:
+        url = os.getenv("SUPABASE_URL", "")
+    if not key:
+        key = os.getenv("SUPABASE_KEY", "")
+    return url.strip(), key.strip()
+
+
+def _is_supabase_configured() -> bool:
+    url, key = _get_supabase_credentials()
+    return bool(url) and bool(key)
+
+
+def _post_to_supabase(table: str, payload: dict) -> bool:
+    """向 Supabase 表插入一条数据。成功返回 True。
+    失败静默返回 False（不影响用户主流程，会回退到本地 CSV）。"""
+    if not _is_supabase_configured():
+        return False
+    try:
+        import requests  # 延迟导入，避免本地无 requests 时崩溃
+    except ImportError:
+        return False
+
+    url, key = _get_supabase_credentials()
+    endpoint = f"{url}/rest/v1/{table}"
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+    }
+    # 清洗 payload:
+    # - timestamp 字段 Supabase 已用 created_at 自动管理，移除
+    # - group 字段在 SQL 里是 group_type（group 是 SQL 保留字）
+    clean = {k: v for k, v in payload.items() if k != "timestamp"}
+    if "group" in clean:
+        clean["group_type"] = clean.pop("group")
+    try:
+        resp = requests.post(endpoint, json=clean, headers=headers, timeout=8)
+        return resp.status_code in (200, 201, 204)
+    except Exception:
+        return False
+
+
+def fetch_from_supabase(table: str, select: str = "*", limit: int = 1000) -> list[dict]:
+    """从 Supabase 读取数据（供评委版数据分析页使用）。
+    失败返回空列表。"""
+    if not _is_supabase_configured():
+        return []
+    try:
+        import requests
+    except ImportError:
+        return []
+
+    url, key = _get_supabase_credentials()
+    endpoint = f"{url}/rest/v1/{table}"
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+    }
+    params = {"select": select, "order": "created_at.desc", "limit": str(limit)}
+    try:
+        resp = requests.get(endpoint, headers=headers, params=params, timeout=10)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception:
+        pass
+    return []
 
 
 # ============================================================
@@ -427,28 +513,38 @@ RESPONSE_FIELDS = [
 
 
 def save_anonymous_response(payload: dict) -> bool:
-    """评估提交时静默把匿名结果追加到 CSV。
+    """评估提交时静默把匿名结果存储。
+
+    存储策略:
+    1. 优先 Supabase（云数据库，持久化）
+    2. 同时也写入本地 CSV（双备份，万一 Supabase 不可用也不丢数据）
 
     设计为永远不抛错，失败时返回 False。
-    完整版也会写入（mode="full"），方便你自己测试时也累积数据。
     """
+    # 准备完整 row
+    row = {field: payload.get(field, "") for field in RESPONSE_FIELDS}
+    row["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    row["session_id"] = get_session_id()
+    row["mode"] = "test" if is_test_mode() else "full"
+
+    # 优先写 Supabase
+    supabase_ok = _post_to_supabase("user_responses", row)
+
+    # 同时写本地 CSV（双备份）
+    csv_ok = False
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         write_header = not RESPONSES_CSV.exists()
-
-        row = {field: payload.get(field, "") for field in RESPONSE_FIELDS}
-        row["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row["session_id"] = get_session_id()
-        row["mode"] = "test" if is_test_mode() else "full"
-
         with open(RESPONSES_CSV, "a", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=RESPONSE_FIELDS)
             if write_header:
                 writer.writeheader()
             writer.writerow(row)
-        return True
+        csv_ok = True
     except Exception:
-        return False
+        pass
+
+    return supabase_ok or csv_ok
 
 
 # ============================================================
@@ -468,24 +564,30 @@ FEEDBACK_FIELDS = [
 
 
 def _save_feedback(payload: dict) -> bool:
-    """把反馈追加到 CSV。失败不抛错。"""
+    """把反馈存储。Supabase + 本地 CSV 双备份。失败不抛错。"""
+    row = {field: payload.get(field, "") for field in FEEDBACK_FIELDS}
+    row["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    row["session_id"] = get_session_id()
+    row["mode"] = "test" if is_test_mode() else "full"
+
+    # Supabase
+    supabase_ok = _post_to_supabase("user_feedback", row)
+
+    # 本地 CSV 双备份
+    csv_ok = False
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         write_header = not FEEDBACK_CSV.exists()
-
-        row = {field: payload.get(field, "") for field in FEEDBACK_FIELDS}
-        row["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row["session_id"] = get_session_id()
-        row["mode"] = "test" if is_test_mode() else "full"
-
         with open(FEEDBACK_CSV, "a", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=FEEDBACK_FIELDS)
             if write_header:
                 writer.writeheader()
             writer.writerow(row)
-        return True
+        csv_ok = True
     except Exception:
-        return False
+        pass
+
+    return supabase_ok or csv_ok
 
 
 @st.fragment
