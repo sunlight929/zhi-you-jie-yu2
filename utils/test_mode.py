@@ -86,11 +86,14 @@ def _post_to_supabase(table: str, payload: dict) -> bool:
         "Prefer": "return=minimal",
     }
     # 清洗 payload:
-    # - timestamp 字段 Supabase 已用 created_at 自动管理，移除
-    # - group 字段在 SQL 里是 group_type（group 是 SQL 保留字）
+    # 1) timestamp 字段 Supabase 已用 created_at 自动管理，移除
+    # 2) group 字段在 SQL 里是 group_type（group 是 SQL 保留字）
+    # 3) 把空字符串 "" 改成 None → JSON null → Supabase INTEGER 列接受 NULL
+    #    （否则学生评估时 living_alone 等中老年字段为 "" 会让 INTEGER 列拒绝）
     clean = {k: v for k, v in payload.items() if k != "timestamp"}
     if "group" in clean:
         clean["group_type"] = clean.pop("group")
+    clean = {k: (None if v == "" else v) for k, v in clean.items()}
     try:
         resp = requests.post(endpoint, json=clean, headers=headers, timeout=8)
         return resp.status_code in (200, 201, 204)
