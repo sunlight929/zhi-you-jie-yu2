@@ -107,8 +107,20 @@ else:
 n_total = len(df_resp_test)
 n_student = int((df_resp_test["group_type"] == "student").sum()) if "group_type" in df_resp_test.columns else 0
 n_elderly = int((df_resp_test["group_type"] == "elderly").sum()) if "group_type" in df_resp_test.columns else 0
-n_feedback = len(df_fb_test)
-feedback_rate = (n_feedback / n_total * 100) if n_total > 0 else 0
+
+# 反馈完成率：用 session_id 关联（避免历史孤立反馈让比率虚高 > 100%）
+# 只统计"既有评估、又有反馈"的 session 数量占评估总数的比例
+n_feedback_total = len(df_fb_test)  # 反馈原始数（含所有,用于主观评价聚合）
+if n_total > 0 and not df_fb_test.empty and \
+   "session_id" in df_resp_test.columns and "session_id" in df_fb_test.columns:
+    resp_sessions = set(df_resp_test["session_id"].dropna().unique())
+    fb_sessions = set(df_fb_test["session_id"].dropna().unique())
+    matched_sessions = resp_sessions & fb_sessions
+    n_feedback = len(matched_sessions)
+    feedback_rate = min(n_feedback / n_total * 100, 100)  # 上限 100%
+else:
+    n_feedback = 0
+    feedback_rate = 0
 
 st.markdown("### 📊 测试覆盖总览")
 c1, c2, c3, c4 = st.columns(4)
