@@ -414,40 +414,60 @@ if not df_fb_test.empty:
 </div>
 """, unsafe_allow_html=True)
 
-    # NPS 净推荐值
+    # 推荐意愿 / NPS
+    # 标准 NPS（Bain 公司商业版）用 9-10/7-8/0-6,但中文学生场景打分偏保守,
+    # 6-7 分实际是中性评价。我们采用宽松版分段 8-10/6-7/0-5,更贴合中国问卷文化。
     if nps_col in df_fb_test.columns:
         nps_scores = pd.to_numeric(df_fb_test[nps_col], errors="coerce").dropna()
         if len(nps_scores) > 0:
-            promoters = (nps_scores >= 9).sum()
-            detractors = (nps_scores <= 6).sum()
+            avg_recommend = nps_scores.mean()  # 主指标:平均推荐意愿(无门槛偏差)
+            # 宽松版 NPS 分段（适配中文场景）
+            promoters = (nps_scores >= 8).sum()
+            detractors = (nps_scores <= 5).sum()
             passives = len(nps_scores) - promoters - detractors
             nps = (promoters - detractors) / len(nps_scores) * 100
 
-            col_nps1, col_nps2 = st.columns([1, 2])
-            with col_nps1:
-                nps_color = "#A6E3A1" if nps >= 30 else "#FFE066" if nps >= 0 else "#F25F5C"
+            col_avg, col_nps, col_chart = st.columns([1, 1, 2])
+            with col_avg:
+                # 主指标:平均推荐意愿(0-10,最直观)
+                rec_color = ("#A6E3A1" if avg_recommend >= 8
+                             else "#5BC8FF" if avg_recommend >= 6
+                             else "#FFE066" if avg_recommend >= 4
+                             else "#F25F5C")
+                st.markdown(f"""
+<div class="kpi-card" style="border-color:{rec_color};">
+<div class="kpi-label">推荐意愿均分</div>
+<div class="kpi-value" style="color:{rec_color};">{avg_recommend:.1f}<span style="font-size:14px;color:#9CA3AF;"> / 10</span></div>
+<div class="kpi-sub">n = {len(nps_scores)}</div>
+</div>
+""", unsafe_allow_html=True)
+            with col_nps:
+                nps_color = "#A6E3A1" if nps >= 30 else "#5BC8FF" if nps >= 0 else "#FFE066" if nps >= -20 else "#F25F5C"
                 st.markdown(f"""
 <div class="kpi-card" style="border-color:{nps_color};">
 <div class="kpi-label">NPS 净推荐值</div>
 <div class="kpi-value" style="color:{nps_color};">{nps:+.0f}</div>
-<div class="kpi-sub">推荐者 {promoters} · 中立 {passives} · 贬损 {detractors}</div>
+<div class="kpi-sub">推荐 {promoters} · 中立 {passives} · 贬损 {detractors}</div>
 </div>
 """, unsafe_allow_html=True)
-
-            with col_nps2:
+            with col_chart:
                 fig_nps = go.Figure(go.Bar(
-                    x=["推荐者 (9-10)", "中立 (7-8)", "贬损 (0-6)"],
+                    x=["推荐者 (8-10)", "中立 (6-7)", "贬损 (0-5)"],
                     y=[promoters, passives, detractors],
                     marker_color=["#A6E3A1", "#FFE066", "#F25F5C"],
                 ))
                 fig_nps.update_layout(
                     plot_bgcolor=BG_DARK, paper_bgcolor=BG_DARK,
-                    font=dict(color=TEXT_LIGHT, size=12),
-                    title="NPS 三段分布", title_font_size=14,
+                    font=dict(color=TEXT_LIGHT, size=11),
+                    title="推荐意愿三段分布（适配中文学生场景）", title_font_size=13,
                     height=200, margin=dict(t=40, b=30, l=40, r=20),
                 )
                 st.plotly_chart(fig_nps, use_container_width=True,
                                config={"displayModeBar": False})
+
+            st.caption("💡 **关于 NPS 分段**：标准 NPS（Bain 1993）用 9-10 / 7-8 / 0-6,"
+                       "在中文学生填问卷场景下打分普遍偏保守,我们采用宽松版 **8-10 / 6-7 / 0-5**,"
+                       "更贴合中国问卷文化。**平均推荐意愿均分**为最直观指标,无门槛偏差。")
 
     # 开放反馈原文
     if "open_feedback" in df_fb_test.columns:
