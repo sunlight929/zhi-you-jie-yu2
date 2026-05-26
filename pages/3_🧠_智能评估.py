@@ -93,7 +93,7 @@ with st.expander("📌 量表来源 · 使用说明 · 免责声明（建议先�
 
 group = st.radio(
     "请选择您所属人群类型",
-    ["学生 / 一般成人（适用 PHQ-9）", "中老年（45 岁及以上，适用 CES-D 10）"],
+    ["学生 / 一般成人（18-44 岁，适用 PHQ-9）", "中老年（45 岁及以上，适用 CES-D 10）"],
     horizontal=True,
 )
 is_student = "学生" in group
@@ -270,12 +270,12 @@ if is_student:
     st.markdown('<div class="scale-title">第二部分：基本信息</div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        age = st.number_input("年龄", 17, 30, 21)
+        age = st.number_input("年龄", 17, 44, 21)
     with c2:
         gender = st.selectbox("性别", ["男", "女"])
     with c3:
-        grade = st.selectbox("年级",
-                            ["大一", "大二", "大三", "大四", "研究生"])
+        grade = st.selectbox("身份 / 年级",
+                            ["大一", "大二", "大三", "大四", "研究生", "已工作 / 非学生"])
     with c4:
         major = st.selectbox("专业类型",
                             ["医学", "理工", "文史", "经管", "艺术", "其他"])
