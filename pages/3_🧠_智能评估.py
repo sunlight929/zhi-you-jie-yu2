@@ -29,6 +29,7 @@ from utils.visualizations import risk_gauge, shap_bar
 from utils.test_mode import (
     is_test_mode,
     inject_test_mode_css,
+    inject_hide_branding_css,
     render_consent_banner,
     save_anonymous_response,
     render_feedback_form,
@@ -65,6 +66,7 @@ st.markdown("""
 # ============================================================
 # 测试模式钩子（完整版下完全不渲染、零影响）
 # ============================================================
+inject_hide_branding_css()  # 隐藏 Streamlit Cloud Fork on GitHub / Manage app 按钮(全模式)
 inject_test_mode_css()  # 仅测试模式下：隐藏侧栏页面导航 + 右下角小标识
 
 st.title("🧠 智能抑郁风险评估")

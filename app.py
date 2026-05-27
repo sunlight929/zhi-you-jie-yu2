@@ -14,7 +14,10 @@ from utils.data_loader import (
     is_real_data_available, data_sources_summary,
 )
 from utils.dark_charts import neon_trend
-from utils.test_mode import redirect_if_test_mode_non_assessment
+from utils.test_mode import (
+    redirect_if_test_mode_non_assessment,
+    inject_hide_branding_css,
+)
 
 
 st.set_page_config(
@@ -26,6 +29,9 @@ st.set_page_config(
 
 # 测试模式：扫码进来的用户直接跳转到评估页（完整版下零影响）
 redirect_if_test_mode_non_assessment()
+
+# 隐藏 Streamlit Cloud 默认的 Fork on GitHub / Manage app 按钮(完整版 + 测试版)
+inject_hide_branding_css()
 
 st.markdown("""
 <style>

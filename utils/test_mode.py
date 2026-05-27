@@ -163,6 +163,46 @@ def get_session_id() -> str:
 # ============================================================
 # 测试模式 CSS：隐藏侧栏导航 + 右下角小标识
 # ============================================================
+def inject_hide_branding_css():
+    """全局隐藏 Streamlit Cloud 的 Fork on GitHub / Manage app 等品牌元素。
+    所有页面都应调用此函数(完整版 + 测试版),保护源码隐私 + 答辩仪表清爽。
+    """
+    st.markdown(
+        """
+    <style>
+    /* === 隐藏 Streamlit Cloud 默认的 GitHub fork / 三点菜单 / 工具栏 === */
+    [data-testid="stToolbar"],
+    [data-testid="stAppToolbar"],
+    [data-testid="stToolbarActions"],
+    [data-testid="stHeaderActionElements"],
+    [data-testid="manage-app-button"],
+    [data-testid="stAppDeployButton"],
+    [data-testid="stMainMenu"],
+    .stToolbarActions,
+    .stAppToolbar,
+    .stAppDeployButton,
+    #MainMenu {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    /* === 兜底:隐藏任何指向 github.com 的链接 === */
+    a[href*="github.com"],
+    a[href*="github.io"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    /* === 隐藏右上角任何剩余的小图标 / 链接组件 === */
+    header[data-testid="stHeader"] [role="button"]:not([data-testid="stSidebarCollapseButton"]):not([data-testid="stSidebarCollapsedControl"]) {
+        display: none !important;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+
 def inject_test_mode_css():
     """仅在测试模式下注入 CSS：
     - 隐藏整个侧栏（AI 助手改为主页面底部渲染）

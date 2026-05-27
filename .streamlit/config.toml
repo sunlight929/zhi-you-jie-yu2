@@ -14,6 +14,7 @@ runOnSave = true
 gatherUsageStats = false
 
 [client]
-# 隐藏右上角 Streamlit 自带的 Deploy 按钮 + 三点菜单
-toolbarMode = "minimal"
+# viewer 模式: 完全隐藏 Fork on GitHub 按钮 + Manage app + 开发者工具栏
+# (比 minimal 更严格,适合答辩展示)
+toolbarMode = "viewer"
 showErrorDetails = false

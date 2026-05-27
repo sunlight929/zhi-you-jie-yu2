@@ -8,13 +8,19 @@ from utils.dark_charts import (
     neon_horizontal_bar, NEON_BLUE, NEON_PINK, NEON_PURPLE,
     BG_DARK, TEXT_LIGHT,
 )
-from utils.test_mode import redirect_if_test_mode_non_assessment
+from utils.test_mode import (
+    redirect_if_test_mode_non_assessment,
+    inject_hide_branding_css,
+)
 import plotly.express as px
 
 st.set_page_config(page_title="天津决策支持 | 知忧·解郁", page_icon="🏙️", layout="wide")
 
 # 测试模式：自动跳转评估页（完整版下零影响）
 redirect_if_test_mode_non_assessment()
+
+# 隐藏 Streamlit Cloud 默认的 Fork on GitHub / Manage app 按钮
+inject_hide_branding_css()
 
 st.markdown("""
 <style>
