@@ -219,7 +219,7 @@ def slide_1():
     add_text(s, "2026 中国大学生计算机设计大赛  ·  大数据应用赛道  ·  生物与医疗大数据小类",
              Inches(1), Inches(5.4), Inches(11.33), Inches(0.4),
              font_size=14, color=TEXT_BODY, align=PP_ALIGN.CENTER)
-    add_text(s, "天津市级赛  ·  天津大学医学院",
+    add_text(s, "国赛参赛作品  ·  天津大学医学院",
              Inches(1), Inches(5.85), Inches(11.33), Inches(0.4),
              font_size=14, color=TEXT_BODY, align=PP_ALIGN.CENTER)
 
