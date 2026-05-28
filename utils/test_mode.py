@@ -171,21 +171,18 @@ def inject_hide_branding_css():
         """
     <style>
     /* === 隐藏 Streamlit Cloud 默认的 GitHub fork / 三点菜单 / 工具栏 === */
+    /* 注意: 不隐藏 stHeaderActionElements 整个容器(它含侧栏展开按钮),
+       只精确隐藏 toolbar / deploy / 主菜单 / GitHub 链接 */
     [data-testid="stToolbar"],
-    [data-testid="stAppToolbar"],
     [data-testid="stToolbarActions"],
-    [data-testid="stHeaderActionElements"],
     [data-testid="manage-app-button"],
     [data-testid="stAppDeployButton"],
     [data-testid="stMainMenu"],
     .stToolbarActions,
-    .stAppToolbar,
     .stAppDeployButton,
     #MainMenu {
         display: none !important;
         visibility: hidden !important;
-        width: 0 !important;
-        height: 0 !important;
     }
     /* === 兜底:隐藏任何指向 github.com 的链接 === */
     a[href*="github.com"],
@@ -196,11 +193,13 @@ def inject_hide_branding_css():
     /* === 确保侧边栏折叠/展开按钮始终可见(避免收起后回不来) === */
     [data-testid="stSidebarCollapseButton"],
     [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stExpandSidebarButton"],
     [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         z-index: 999999 !important;
+        pointer-events: auto !important;
     }
     </style>
     """,
