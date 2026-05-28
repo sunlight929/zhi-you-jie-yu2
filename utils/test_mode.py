@@ -193,9 +193,14 @@ def inject_hide_branding_css():
         display: none !important;
         visibility: hidden !important;
     }
-    /* === 隐藏右上角任何剩余的小图标 / 链接组件 === */
-    header[data-testid="stHeader"] [role="button"]:not([data-testid="stSidebarCollapseButton"]):not([data-testid="stSidebarCollapsedControl"]) {
-        display: none !important;
+    /* === 确保侧边栏折叠/展开按钮始终可见(避免收起后回不来) === */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
     }
     </style>
     """,
