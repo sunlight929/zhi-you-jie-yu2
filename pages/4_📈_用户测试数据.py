@@ -303,6 +303,11 @@ if "scale_score" in df_resp_test.columns and "final_proba" in df_resp_test.colum
 
         # Pearson 相关
         r, p = pearsonr(valid["scale_norm"], valid["final_proba"])
+        # p 值学术规范显示:极小时写 "< 0.001"(不写 "= 0.0000")
+        if p < 0.001:
+            p_str = "< 0.001"
+        else:
+            p_str = f"= {p:.3f}"
 
         fig_scatter = px.scatter(
             valid, x="scale_norm", y="final_proba",
@@ -311,7 +316,7 @@ if "scale_score" in df_resp_test.columns and "final_proba" in df_resp_test.colum
             labels={"scale_norm": "量表归一化分数 (0-1)",
                     "final_proba": "ML 综合风险概率",
                     "group_type": "人群"},
-            title=f"散点图：Pearson r = {r:.3f}, p = {p:.4f} (n = {len(valid)})",
+            title=f"散点图：Pearson r = {r:.3f}, p {p_str} (n = {len(valid)})",
         )
         # 对角线参考线
         fig_scatter.add_shape(
