@@ -167,39 +167,22 @@ def inject_hide_branding_css():
     """全局隐藏 Streamlit Cloud 的 Fork on GitHub / Manage app 等品牌元素。
     所有页面都应调用此函数(完整版 + 测试版),保护源码隐私 + 答辩仪表清爽。
     """
+    # 最小化策略:只精准隐藏 GitHub 链接 + Deploy 按钮。
+    # 绝不隐藏 stToolbar / stHeaderActionElements 等容器——新版 Streamlit Cloud
+    # 把侧栏展开按钮放在这些容器内,隐藏容器会导致侧栏收起后无法展开。
+    # GitHub 仓库已设为 Private,即使按钮残留点击也是 404,无源码泄露风险。
     st.markdown(
         """
     <style>
-    /* === 隐藏 Streamlit Cloud 默认的 GitHub fork / 三点菜单 / 工具栏 === */
-    /* 注意: 不隐藏 stHeaderActionElements 整个容器(它含侧栏展开按钮),
-       只精确隐藏 toolbar / deploy / 主菜单 / GitHub 链接 */
-    [data-testid="stToolbar"],
-    [data-testid="stToolbarActions"],
-    [data-testid="manage-app-button"],
-    [data-testid="stAppDeployButton"],
-    [data-testid="stMainMenu"],
-    .stToolbarActions,
-    .stAppDeployButton,
-    #MainMenu {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    /* === 兜底:隐藏任何指向 github.com 的链接 === */
+    /* 精准隐藏 GitHub 链接(Fork 按钮本质是 a[href=github]) */
     a[href*="github.com"],
     a[href*="github.io"] {
         display: none !important;
-        visibility: hidden !important;
     }
-    /* === 确保侧边栏折叠/展开按钮始终可见(避免收起后回不来) === */
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="stExpandSidebarButton"],
-    [data-testid="collapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 999999 !important;
-        pointer-events: auto !important;
+    /* 隐藏 Deploy 按钮(明确 testid,确定不含侧栏控制) */
+    [data-testid="stAppDeployButton"],
+    .stAppDeployButton {
+        display: none !important;
     }
     </style>
     """,
