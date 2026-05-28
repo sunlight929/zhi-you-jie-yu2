@@ -307,19 +307,20 @@ st.plotly_chart(neon_trend(trend), use_container_width=True,
 
 
 # ============================================================
-# 四大核心模块
+# 六大核心模块
 # ============================================================
-st.markdown('<div class="section-title">🎯 平台五大核心模块</div>',
+st.markdown('<div class="section-title">🎯 平台六大核心模块</div>',
            unsafe_allow_html=True)
-mc1, mc2, mc3, mc4, mc5 = st.columns(5)
 modules = [
     ("📡", "数据驾驶舱", "霓虹大屏数据中心，全国地图 + 多源融合 KPI 实时监测"),
     ("📊", "数据全景", "真实 + 仿真四源数据画像，PHQ-9 / CES-D 多维度分布"),
     ("🔍", "风险因素分析", "相关性矩阵 + 特征重要性 + 雷达图，识别核心风险"),
-    ("🧠", "智能评估", "PHQ-9 / CES-D 量表 + 风险问卷 + ML 模型三合一"),
+    ("🧠", "智能评估", "PHQ-9 / CES-D 量表 + ML 模型 + DeepSeek AI 心理助手"),
+    ("📈", "用户测试数据", "真实用户测试 + 模型可行性验证（Pearson 相关）"),
     ("🏙️", "天津决策支持", "16 区县检出率 + 资源配置对比 + 求助资源整合"),
 ]
-for col, (icon, title, desc) in zip([mc1, mc2, mc3, mc4, mc5], modules):
+mod_cols = st.columns(6)
+for col, (icon, title, desc) in zip(mod_cols, modules):
     with col:
         st.markdown(f"""
 <div class="feature-card">
