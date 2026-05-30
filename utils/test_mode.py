@@ -174,8 +174,12 @@ def inject_hide_branding_css():
     #     是 JS 按钮(不是 <a>),CSS 抓不到 href,只能整块隐藏。
     #     评委不需要 Streamlit 默认菜单(Settings/Print/About),浏览器自带功能足够。
     #  4) 右下角"Made with Streamlit / View source"小徽章 viewerBadge
-    #  5) 绝不隐藏 stToolbar / stHeaderActionElements 等容器——侧栏展开按钮
-    #     在这些容器内,隐藏会导致侧栏收起后无法展开。
+    #  5) 右上角 Toolbar Actions 容器:Share / Star / Edit / GitHub 等
+    #     Streamlit Cloud 给 Public 仓库自动加的社区互动按钮全在这里
+    #  6) title / aria-label 含"GitHub"的兜底捕获(防漏)
+    #  7) 绝不隐藏 stToolbar / stHeader / stHeaderActionElements 等容器——侧栏展开按钮
+    #     在这些容器内,隐藏会导致侧栏收起后无法展开。stToolbarActions 是右上角
+    #     独立的容器,跟侧栏控制无关,可以安全隐藏。
     st.markdown(
         """
     <style>
@@ -196,6 +200,18 @@ def inject_hide_branding_css():
     }
     /* 4) 右下角"Made with Streamlit / View source"徽章(类名带 hash) */
     [class*="viewerBadge"] {
+        display: none !important;
+    }
+    /* 5) 右上角 Toolbar Actions 容器(Share / ⭐ Star / ✏️ Edit / 🐙 GitHub) */
+    [data-testid="stToolbarActions"],
+    [data-testid="stToolbar"] [data-testid="stToolbarActions"] {
+        display: none !important;
+    }
+    /* 6) 兜底:title / aria-label 含"github"的任何元素(大小写不敏感) */
+    [title*="github" i],
+    [aria-label*="github" i],
+    [title*="GitHub" i],
+    [aria-label*="GitHub" i] {
         display: none !important;
     }
     </style>
