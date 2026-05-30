@@ -13,10 +13,11 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT.parent  # /Users/hejingqing/Desktop/比赛/计算机设计大赛/
 
 DOCS = [
-    (ROOT / "report" / "研究报告.md", "知忧解郁_研究报告_v1.0.pdf"),
-    (ROOT / "docs" / "用户手册.md",   "知忧解郁_用户手册_v1.0.pdf"),
-    (ROOT / "docs" / "技术文档.md",   "知忧解郁_技术文档_v1.0.pdf"),
-    (ROOT / "README.md",              "知忧解郁_README_v1.0.pdf"),
+    (ROOT / "report" / "研究报告.md",           "知忧解郁_研究报告_v1.0.pdf"),
+    (ROOT / "docs" / "用户手册.md",             "知忧解郁_用户手册_v1.0.pdf"),
+    (ROOT / "docs" / "技术文档.md",             "知忧解郁_技术文档_v1.0.pdf"),
+    (ROOT / "README.md",                        "知忧解郁_README_v1.0.pdf"),
+    (ROOT / "report" / "作品访问与运行说明.md", "知忧解郁_作品访问与运行说明.pdf"),
 ]
 
 CSS = """

@@ -167,21 +167,35 @@ def inject_hide_branding_css():
     """全局隐藏 Streamlit Cloud 的 Fork on GitHub / Manage app 等品牌元素。
     所有页面都应调用此函数(完整版 + 测试版),保护源码隐私 + 答辩仪表清爽。
     """
-    # 最小化策略:只精准隐藏 GitHub 链接 + Deploy 按钮。
-    # 绝不隐藏 stToolbar / stHeaderActionElements 等容器——新版 Streamlit Cloud
-    # 把侧栏展开按钮放在这些容器内,隐藏容器会导致侧栏收起后无法展开。
-    # GitHub 仓库已设为 Private,即使按钮残留点击也是 404,无源码泄露风险。
+    # 隐藏策略:
+    #  1) GitHub 链接(凡是 a[href=github] 的直接干掉)
+    #  2) Deploy 按钮(右上角"Deploy")
+    #  3) 整个汉堡菜单 #MainMenu / stMainMenu —— 里面的"View app source"
+    #     是 JS 按钮(不是 <a>),CSS 抓不到 href,只能整块隐藏。
+    #     评委不需要 Streamlit 默认菜单(Settings/Print/About),浏览器自带功能足够。
+    #  4) 右下角"Made with Streamlit / View source"小徽章 viewerBadge
+    #  5) 绝不隐藏 stToolbar / stHeaderActionElements 等容器——侧栏展开按钮
+    #     在这些容器内,隐藏会导致侧栏收起后无法展开。
     st.markdown(
         """
     <style>
-    /* 精准隐藏 GitHub 链接(Fork 按钮本质是 a[href=github]) */
+    /* 1) 任何 GitHub 链接 */
     a[href*="github.com"],
     a[href*="github.io"] {
         display: none !important;
     }
-    /* 隐藏 Deploy 按钮(明确 testid,确定不含侧栏控制) */
+    /* 2) Deploy 按钮(明确 testid,确定不含侧栏控制) */
     [data-testid="stAppDeployButton"],
     .stAppDeployButton {
+        display: none !important;
+    }
+    /* 3) 汉堡菜单(包含"View app source"→ GitHub 仓库的入口) */
+    #MainMenu,
+    [data-testid="stMainMenu"] {
+        display: none !important;
+    }
+    /* 4) 右下角"Made with Streamlit / View source"徽章(类名带 hash) */
+    [class*="viewerBadge"] {
         display: none !important;
     }
     </style>
